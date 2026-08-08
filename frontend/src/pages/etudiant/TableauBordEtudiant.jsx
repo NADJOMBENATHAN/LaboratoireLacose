@@ -1,18 +1,47 @@
-import { HiOutlineBeaker, HiOutlineClipboardList, HiOutlineDocumentText, HiOutlineAcademicCap } from "react-icons/hi";
+import {
+  HiOutlineBeaker,
+  HiOutlineClipboardList,
+  HiOutlineDocumentText,
+  HiOutlineAcademicCap,
+} from "react-icons/hi";
 
 function TableauBordEtudiant() {
+  // Donnée simulée pour l'instant — sera remplacée par les infos
+  // de l'utilisateur réellement connecté une fois l'authentification backend en place
   const etudiant = {
     nom: "Koffi",
     prenom: "Ama",
     matricule: "ETU2024-015",
     filiere: "Génie Logiciel",
   };
+  // Statistiques affichées en haut de page, sous forme de cartes.
+  // Centralisées dans un tableau pour générer les cartes avec .map() plutôt que de les répéter en JSX
 
   const stats = [
-    { label: "Laboratoires", value: 0, icon: HiOutlineBeaker, color: "text-indigo-600" },
-    { label: "Travaux pratiques", value: 3, icon: HiOutlineClipboardList, color: "text-blue-600" },
-    { label: "Soumissions", value: 1, icon: HiOutlineDocumentText, color: "text-amber-600" },
-    { label: "Filière", value: etudiant.filiere, icon: HiOutlineAcademicCap, color: "text-green-600" },
+    {
+      label: "Laboratoires",
+      value: 0,
+      icon: HiOutlineBeaker,
+      color: "text-indigo-600",
+    },
+    {
+      label: "Travaux pratiques",
+      value: 3,
+      icon: HiOutlineClipboardList,
+      color: "text-blue-600",
+    },
+    {
+      label: "Soumissions",
+      value: 1,
+      icon: HiOutlineDocumentText,
+      color: "text-amber-600",
+    },
+    {
+      label: "Filière",
+      value: etudiant.filiere,
+      icon: HiOutlineAcademicCap,
+      color: "text-green-600",
+    },
   ];
 
   return (
@@ -31,7 +60,9 @@ function TableauBordEtudiant() {
         <h2 className="text-lg font-semibold text-gray-800 mb-1">
           Bienvenue, {etudiant.prenom} {etudiant.nom}
         </h2>
-        <p className="text-gray-500 text-sm">Matricule : {etudiant.matricule}</p>
+        <p className="text-gray-500 text-sm">
+          Matricule : {etudiant.matricule}
+        </p>
       </div>
     </>
   );

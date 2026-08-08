@@ -2,14 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Connexion() {
+  // Champs contrôlés du formulaire : React garde en mémoire
+  // ce que l'utilisateur tape, pour pouvoir l'envoyer au backend
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
+  //  Permet de rediriger l'utilisateur depuis le code (pas juste via un lien)
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // empêche le rechargement automatique de la page par le navigateur
+
     // Version temporaire : pas encore de vraie vérification côté backend
-    // On redirige simplement vers l'espace Étudiant pour pouvoir tester
+    // (à remplacer par un appel API type POST /api/auth/login)
     navigate("/etudiant");
   };
 
@@ -28,8 +32,8 @@ function Connexion() {
         </label>
         <input
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={email} // le champ affiche toujours la valeur en mémoire
+          onChange={(e) => setEmail(e.target.value)} // met à jour la mémoire à chaque frappe
           className="w-full mb-4 px-4 py-2 rounded-lg bg-indigo-50 border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-300"
           required
         />

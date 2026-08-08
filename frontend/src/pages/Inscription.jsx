@@ -2,16 +2,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Inscription() {
+  // Champs contrôlés du formulaire
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [confirmation, setConfirmation] = useState("");
+  // Garde en mémoire un message d'erreur à afficher si la validation échoue
   const [erreur, setErreur] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    // Vérification simple avant l'envoi : les deux mots de passe doivent correspondre.
+    // Si ce n'est pas le cas, on affiche une erreur et on arrête la fonction avec return
     if (motDePasse !== confirmation) {
       setErreur("Les mots de passe ne correspondent pas.");
       return;
@@ -19,6 +22,7 @@ function Inscription() {
 
     setErreur("");
     // Version temporaire : pas encore de vraie création de compte côté backend
+    // (à remplacer par un appel API type POST /api/auth/register)
     navigate("/etudiant");
   };
 
@@ -76,7 +80,7 @@ function Inscription() {
           className="w-full mb-2 px-4 py-2 rounded-lg bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-300"
           required
         />
-
+        {/* Affiché seulement si erreur n'est pas une chaîne vide (rendu conditionnel) */}
         {erreur && <p className="text-red-500 text-sm mb-4">{erreur}</p>}
 
         <button

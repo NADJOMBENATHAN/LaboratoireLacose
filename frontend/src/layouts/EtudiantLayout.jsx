@@ -3,10 +3,13 @@ import { NavLink, Outlet } from "react-router-dom";
 import {
   HiOutlineViewGrid,
   HiOutlineBeaker,
+  HiOutlineClipboardList,
   HiOutlineMenu,
   HiOutlineX,
 } from "react-icons/hi";
 
+// Liste des liens de navigation de la sidebar Étudiant.
+// Centralisée ici pour éviter de dupliquer le code JSX pour chaque lien.
 const navItems = [
   {
     to: "/etudiant",
@@ -19,9 +22,15 @@ const navItems = [
     label: "Mes laboratoires",
     icon: HiOutlineBeaker,
   },
+  {
+    to: "/etudiant/travaux",
+    label: "Travaux pratiques",
+    icon: HiOutlineClipboardList,
+  },
 ];
 
 function EtudiantLayout() {
+  // Garde en mémoire si la sidebar est ouverte (avec texte) ou repliée (icônes seules)
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -33,18 +42,21 @@ function EtudiantLayout() {
           {isOpen && (
             <span className="font-bold text-lg text-gray-800">LaCOSE</span>
           )}
+          {/* Inverse l'état isOpen à chaque clic */}
           <button onClick={() => setIsOpen(!isOpen)} className="text-gray-500">
             {isOpen ? <HiOutlineX size={22} /> : <HiOutlineMenu size={22} />}
           </button>
         </div>
 
         <nav className="flex-1 mt-4 space-y-1 px-2">
+          {/* .map() génère un lien de navigation pour chaque élément de navItems */}
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
-              end={end}
+              end={end} // évite que "Tableau de bord" reste actif sur les sous-pages
               className={({ isActive }) =>
+                // NavLink fournit isActive automatiquement : true si l'URL correspond à "to"
                 `flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
@@ -60,6 +72,8 @@ function EtudiantLayout() {
       </aside>
 
       <main className="flex-1 overflow-y-auto p-8">
+        {/* Outlet affiche le composant correspondant à la route enfant active
+            (TableauBordEtudiant, MesLaboratoires ou TravauxPratiques) */}
         <Outlet />
       </main>
     </div>

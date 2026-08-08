@@ -4,6 +4,8 @@ import MesLaboratoires from "./pages/etudiant/MesLaboratoires";
 import TableauBordEtudiant from "./pages/etudiant/TableauBordEtudiant";
 import Connexion from "./pages/Connexion";
 import Inscription from "./pages/Inscription";
+import TravauxPratiques from "./pages/etudiant/TravauxPratiques";
+
 function App() {
   return (
     <BrowserRouter>
@@ -13,6 +15,7 @@ function App() {
         <Route path="/etudiant" element={<EtudiantLayout />}>
           <Route index element={<TableauBordEtudiant />} />
           <Route path="laboratoires" element={<MesLaboratoires />} />
+          <Route path="travaux" element={<TravauxPratiques />} />
         </Route>
       </Routes>
     </BrowserRouter>
