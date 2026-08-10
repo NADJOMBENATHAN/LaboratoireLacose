@@ -14,9 +14,9 @@ function TableauBordEtudiant() {
     matricule: "ETU2024-015",
     filiere: "Génie Logiciel",
   };
+
   // Statistiques affichées en haut de page, sous forme de cartes.
   // Centralisées dans un tableau pour générer les cartes avec .map() plutôt que de les répéter en JSX
-
   const stats = [
     {
       label: "Laboratoires",
@@ -45,7 +45,7 @@ function TableauBordEtudiant() {
   ];
 
   return (
-    <>
+    <div className="page-enter">
       <div className="grid grid-cols-4 gap-6 mb-6">
         {stats.map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white rounded-xl p-6 shadow-sm">
@@ -64,7 +64,7 @@ function TableauBordEtudiant() {
           Matricule : {etudiant.matricule}
         </p>
       </div>
-    </>
+    </div>
   );
 }
 

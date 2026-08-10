@@ -4,13 +4,15 @@ import {
   HiOutlineViewGrid,
   HiOutlineBeaker,
   HiOutlineClipboardList,
+  HiOutlineDocumentText,
+  HiOutlineCog,
   HiOutlineMenu,
   HiOutlineX,
 } from "react-icons/hi";
 
-// Liste des liens de navigation de la sidebar Étudiant.
-// Centralisée ici pour éviter de dupliquer le code JSX pour chaque lien.
 const navItems = [
+  // Liste des liens de navigation de la sidebar Étudiant.
+  // Centralisée ici pour éviter de dupliquer le code JSX pour chaque lien.
   {
     to: "/etudiant",
     label: "Tableau de bord",
@@ -27,10 +29,15 @@ const navItems = [
     label: "Travaux pratiques",
     icon: HiOutlineClipboardList,
   },
+  {
+    to: "/etudiant/soumissions",
+    label: "Mes soumissions",
+    icon: HiOutlineDocumentText,
+  },
+  { to: "/etudiant/parametres", label: "Paramètres", icon: HiOutlineCog },
 ];
 
 function EtudiantLayout() {
-  // Garde en mémoire si la sidebar est ouverte (avec texte) ou repliée (icônes seules)
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -42,14 +49,16 @@ function EtudiantLayout() {
           {isOpen && (
             <span className="font-bold text-lg text-gray-800">LaCOSE</span>
           )}
-          {/* Inverse l'état isOpen à chaque clic */}
-          <button onClick={() => setIsOpen(!isOpen)} className="text-gray-500">
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="text-gray-500"
+          >
             {isOpen ? <HiOutlineX size={22} /> : <HiOutlineMenu size={22} />}
           </button>
         </div>
 
         <nav className="flex-1 mt-4 space-y-1 px-2">
-          {/* .map() génère un lien de navigation pour chaque élément de navItems */}
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -57,10 +66,10 @@ function EtudiantLayout() {
               end={end} // évite que "Tableau de bord" reste actif sur les sous-pages
               className={({ isActive }) =>
                 // NavLink fournit isActive automatiquement : true si l'URL correspond à "to"
-                `flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                `flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white scale-[1.02]"
+                    : "text-gray-600 hover:bg-gray-100 hover:translate-x-1"
                 }`
               }
             >

@@ -5,6 +5,8 @@ import TableauBordEtudiant from "./pages/etudiant/TableauBordEtudiant";
 import Connexion from "./pages/Connexion";
 import Inscription from "./pages/Inscription";
 import TravauxPratiques from "./pages/etudiant/TravauxPratiques";
+import MesSoumissions from "./pages/etudiant/MesSoumissions";
+import Parametres from "./pages/etudiant/Parametres";
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
           <Route index element={<TableauBordEtudiant />} />
           <Route path="laboratoires" element={<MesLaboratoires />} />
           <Route path="travaux" element={<TravauxPratiques />} />
+          <Route path="soumissions" element={<MesSoumissions />} />
+          <Route path="parametres" element={<Parametres />} />
         </Route>
       </Routes>
     </BrowserRouter>
