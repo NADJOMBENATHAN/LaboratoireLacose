@@ -60,6 +60,40 @@ app.get("/api/travaux", (req, res) => {
 app.get("/api/laboratoires", (req, res) => {
   res.json(laboratoires);
 });
+// Données simulées pour les soumissions —
+// seront remplacées par de vraies requêtes PostgreSQL une fois la base connectée
+const soumissions = [
+  {
+    id: 1,
+    titre: "Dosage acido-basique",
+    dateSoumission: "05/08/2026",
+    statut: "En attente",
+  },
+];
+
+// Route qui renvoie la liste des soumissions de l'étudiant
+app.get("/api/soumissions", (req, res) => {
+  res.json(soumissions);
+});
+
+// Donnée simulée pour le profil de l'étudiant —
+// sera remplacée par les vraies infos de l'utilisateur connecté (authentification)
+let etudiant = {
+  nom: "Koffi",
+  prenom: "Ama",
+  email: "ama.koffi@etu.univ-kara.tg",
+};
+
+// Route qui renvoie le profil actuel
+app.get("/api/profil", (req, res) => {
+  res.json(etudiant);
+});
+
+// Route qui met à jour le profil avec les nouvelles valeurs envoyées par le formulaire
+app.put("/api/profil", (req, res) => {
+  etudiant = { ...etudiant, ...req.body };
+  res.json(etudiant);
+});
 
 app.listen(5000, () => {
   console.log("Serveur lancé sur le port 5000");

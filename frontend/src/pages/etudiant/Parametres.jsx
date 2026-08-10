@@ -1,16 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Parametres() {
-  // Champs contrôlés pour modifier le profil (correspond à modifierProfil()
-  // dans la classe Utilisateur du diagramme UML)
-  const [nom, setNom] = useState("Koffi");
-  const [prenom, setPrenom] = useState("Ama");
-  const [email, setEmail] = useState("ama.koffi@etu.univ-kara.tg");
+  const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
+  const [email, setEmail] = useState("");
   const [messageConfirmation, setMessageConfirmation] = useState("");
 
-  const handleSubmit = (e) => {
+  // Au chargement, on récupère le profil actuel depuis le backend
+  useEffect(() => {
+    const recupererProfil = async () => {
+      const reponse = await fetch("http://localhost:5000/api/profil");
+      const donnees = await reponse.json();
+      setNom(donnees.nom);
+      setPrenom(donnees.prenom);
+      setEmail(donnees.email);
+    };
+    recupererProfil();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Version temporaire : pas encore d'appel API (à remplacer par PUT /api/utilisateurs/:id)
+
+    // On envoie les nouvelles valeurs au backend avec une requête PUT
+    await fetch("http://localhost:5000/api/profil", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nom, prenom, email }),
+    });
+
     setMessageConfirmation("Profil mis à jour avec succès.");
   };
 

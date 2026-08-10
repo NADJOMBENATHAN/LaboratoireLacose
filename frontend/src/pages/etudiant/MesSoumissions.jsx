@@ -1,14 +1,16 @@
+import { useState, useEffect } from "react";
+
 function MesSoumissions() {
-  // Données simulées — seront remplacées par un appel API
-  // (GET /api/etudiants/:id/soumissions) une fois le backend connecté
-  const soumissions = [
-    {
-      id: 1,
-      titre: "Dosage acido-basique",
-      dateSoumission: "05/08/2026",
-      statut: "En attente",
-    },
-  ];
+  const [soumissions, setSoumissions] = useState([]);
+
+  useEffect(() => {
+    const recupererSoumissions = async () => {
+      const reponse = await fetch("http://localhost:5000/api/soumissions");
+      const donnees = await reponse.json();
+      setSoumissions(donnees);
+    };
+    recupererSoumissions();
+  }, []);
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm page-enter">
@@ -17,7 +19,6 @@ function MesSoumissions() {
       </h2>
 
       {soumissions.length === 0 ? (
-        // Rendu conditionnel : message affiché seulement si la liste est vide
         <p className="text-gray-500 text-sm">
           Aucune soumission pour l'instant.
         </p>
