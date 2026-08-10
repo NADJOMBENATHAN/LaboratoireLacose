@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const pool = require("./db");
 
 const app = express();
 
@@ -12,46 +13,32 @@ app.get("/", (req, res) => {
 
 // Données simulées côté backend pour l'instant —
 // seront remplacées par de vraies requêtes PostgreSQL une fois la base connectée
-const laboratoires = [
-  {
-    id: 1,
-    nom: "Laboratoire de Chimie Organique", // <- modifié ici
-    description: "Étude des composés organiques et de leurs réactions.",
-    domaine: "Chimie organique",
-  },
-  {
-    id: 2,
-    nom: "Laboratoire des Substances Naturelles",
-    description: "Extraction et analyse de substances issues de plantes.",
-    domaine: "Chimie naturelle",
-  },
-];
+// Route qui récupère les laboratoires depuis la vraie base PostgreSQL
+app.get("/api/laboratoires", async (req, res) => {
+  try {
+    const resultat = await pool.query("SELECT * FROM laboratoires");
+    res.json(resultat.rows);
+  } catch (erreur) {
+    console.error(erreur);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la récupération des laboratoires" });
+  }
+});
 // Données simulées pour les travaux pratiques —
 // seront remplacées par de vraies requêtes PostgreSQL une fois la base connectée
-const travaux = [
-  {
-    id: 1,
-    titre: "Dosage acido-basique",
-    description:
-      "Réaliser un dosage pour déterminer la concentration d'une solution acide.",
-    dateLimite: "15/09/2026",
-  },
-  {
-    id: 2,
-    titre: "Mesure du pH",
-    description:
-      "Mesurer le pH de différentes solutions et interpréter les résultats.",
-    dateLimite: "22/09/2026",
-  },
-  {
-    id: 3,
-    titre: "Préparation d'une solution",
-    description:
-      "Préparer une solution à une concentration donnée par dilution.",
-    dateLimite: "29/09/2026",
-  },
-];
-
+// Route qui récupère les travaux pratiques depuis la vraie base PostgreSQL
+app.get("/api/travaux", async (req, res) => {
+  try {
+    const resultat = await pool.query("SELECT * FROM travaux_pratiques");
+    res.json(resultat.rows);
+  } catch (erreur) {
+    console.error(erreur);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des travaux pratiques",
+    });
+  }
+});
 // Route qui renvoie la liste des travaux pratiques
 app.get("/api/travaux", (req, res) => {
   res.json(travaux);
@@ -62,14 +49,18 @@ app.get("/api/laboratoires", (req, res) => {
 });
 // Données simulées pour les soumissions —
 // seront remplacées par de vraies requêtes PostgreSQL une fois la base connectée
-const soumissions = [
-  {
-    id: 1,
-    titre: "Dosage acido-basique",
-    dateSoumission: "05/08/2026",
-    statut: "En attente",
-  },
-];
+// Route qui récupère les soumissions depuis PostgreSQL
+app.get("/api/soumissions", async (req, res) => {
+  try {
+    const resultat = await pool.query("SELECT * FROM soumissions");
+    res.json(resultat.rows);
+  } catch (erreur) {
+    console.error(erreur);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la récupération des soumissions" });
+  }
+});
 
 // Route qui renvoie la liste des soumissions de l'étudiant
 app.get("/api/soumissions", (req, res) => {
@@ -84,15 +75,35 @@ let etudiant = {
   email: "ama.koffi@etu.univ-kara.tg",
 };
 
-// Route qui renvoie le profil actuel
-app.get("/api/profil", (req, res) => {
-  res.json(etudiant);
+// Route qui récupère le profil de l'étudiant (id 1 pour l'instant,
+// en attendant la vraie authentification qui identifiera l'utilisateur connecté)
+app.get("/api/profil", async (req, res) => {
+  try {
+    const resultat = await pool.query("SELECT * FROM etudiants WHERE id = 1");
+    res.json(resultat.rows[0]);
+  } catch (erreur) {
+    console.error(erreur);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la récupération du profil" });
+  }
 });
 
-// Route qui met à jour le profil avec les nouvelles valeurs envoyées par le formulaire
-app.put("/api/profil", (req, res) => {
-  etudiant = { ...etudiant, ...req.body };
-  res.json(etudiant);
+// Route qui met à jour le profil dans la base de données
+app.put("/api/profil", async (req, res) => {
+  const { nom, prenom, email } = req.body;
+  try {
+    const resultat = await pool.query(
+      "UPDATE etudiants SET nom = $1, prenom = $2, email = $3 WHERE id = 1 RETURNING *",
+      [nom, prenom, email],
+    );
+    res.json(resultat.rows[0]);
+  } catch (erreur) {
+    console.error(erreur);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la mise à jour du profil" });
+  }
 });
 
 app.listen(5000, () => {
