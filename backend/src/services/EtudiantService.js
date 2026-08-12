@@ -6,7 +6,7 @@ class EtudiantService {
     }
 
     async getAllEtudiants() {
-        const etudiants = await this.etudiantRepository.findAll();
+        const etudiants = await this.etudiantRepository.findAllWithUsers();
         return etudiants.map(e => {
             delete e.mot_de_passe;
             return e;

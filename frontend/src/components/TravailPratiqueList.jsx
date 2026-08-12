@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
-import travailPratiqueService from '../services/travailPratiqueService'
+import { useState, useEffect, useCallback } from 'react'
 import TravailPratiqueForm from './TravailPratiqueForm'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const TravailPratiqueList = () => {
   const [tps, setTps] = useState([])
@@ -9,21 +10,22 @@ const TravailPratiqueList = () => {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
 
-  useEffect(() => {
-    loadTPs()
-  }, [])
-
-  const loadTPs = async () => {
+  const loadTPs = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await travailPratiqueService.getAll()
+      const response = await fetch(`${API_BASE}/projets`)
+      const data = await response.json()
       setTps(data)
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement des projets')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadTPs()
+  }, [loadTPs])
 
   const handleCreate = () => {
     setEditingId(null)
@@ -41,9 +43,14 @@ const TravailPratiqueList = () => {
     }
 
     try {
-      await travailPratiqueService.delete(id)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/projets/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Failed to delete travail pratique')
       loadTPs()
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la suppression')
     }
   }

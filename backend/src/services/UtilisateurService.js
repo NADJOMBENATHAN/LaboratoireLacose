@@ -58,6 +58,22 @@ class UtilisateurService {
     async getEtudiants() {
         return await this.utilisateurRepository.findByRole('etudiant');
     }
+
+    async getEtudiantsByFiliere(filiere) {
+        return await this.utilisateurRepository.findEtudiantsByFiliere(filiere);
+    }
+
+    async getEtudiantsByNiveau(niveau) {
+        return await this.utilisateurRepository.findEtudiantsByNiveau(niveau);
+    }
+
+    async getProfesseursBySpecialite(specialite) {
+        return await this.utilisateurRepository.findProfesseursBySpecialite(specialite);
+    }
+
+    async getProfesseursByDepartement(departement) {
+        return await this.utilisateurRepository.findProfesseursByDepartement(departement);
+    }
 }
 
 module.exports = UtilisateurService;

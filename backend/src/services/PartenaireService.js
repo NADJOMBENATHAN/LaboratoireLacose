@@ -1,4 +1,7 @@
 const PartenaireRepository = require('../repositories/PartenaireRepository');
+const bcrypt = require('bcrypt');
+
+const SALT_ROUNDS = 10;
 
 class PartenaireService {
     constructor() {
@@ -39,12 +42,22 @@ class PartenaireService {
     }
 
     async createPartenaire(data) {
-        const { email } = data;
+        const { email, mot_de_passe } = data;
         const existing = await this.partenaireRepository.findByEmail(email);
         if (existing) {
             throw new Error('Email déjà utilisé');
         }
-        return await this.partenaireRepository.create(data);
+        
+        // Hasher le mot de passe
+        const hashedPassword = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
+        const dataWithHash = {
+            ...data,
+            mot_de_passe: hashedPassword
+        };
+        
+        const result = await this.partenaireRepository.create(dataWithHash);
+        delete result.mot_de_passe;
+        return result;
     }
 
     async updatePartenaire(id, data) {
@@ -60,7 +73,15 @@ class PartenaireService {
             }
         }
         
-        return await this.partenaireRepository.update(id, data);
+        // Hasher le mot de passe si fourni
+        let dataToUpdate = { ...data };
+        if (data.mot_de_passe) {
+            dataToUpdate.mot_de_passe = await bcrypt.hash(data.mot_de_passe, SALT_ROUNDS);
+        }
+        
+        const result = await this.partenaireRepository.update(id, dataToUpdate);
+        delete result.mot_de_passe;
+        return result;
     }
 
     async deletePartenaire(id) {

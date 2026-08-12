@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import partenaireService from '../services/partenaireService'
 import PartenaireForm from './PartenaireForm'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const PartenaireList = () => {
   const [partenaires, setPartenaires] = useState([])
@@ -16,9 +17,10 @@ const PartenaireList = () => {
   const loadPartenaires = async () => {
     try {
       setLoading(true)
-      const data = await partenaireService.getAll()
+      const response = await fetch(`${API_BASE}/partenaires`)
+      const data = await response.json()
       setPartenaires(data)
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement des partenaires')
     } finally {
       setLoading(false)
@@ -41,9 +43,14 @@ const PartenaireList = () => {
     }
 
     try {
-      await partenaireService.delete(id)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/partenaires/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Failed to delete partenaire')
       loadPartenaires()
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la suppression')
     }
   }

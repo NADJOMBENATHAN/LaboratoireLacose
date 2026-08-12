@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import professeurService from '../services/professeurService'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const ProfesseurForm = ({ professeurId, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -22,7 +23,11 @@ const ProfesseurForm = ({ professeurId, onSuccess, onCancel }) => {
 
   const loadProfesseur = async () => {
     try {
-      const professeur = await professeurService.getById(professeurId)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/professeurs-crud/${professeurId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const professeur = await response.json()
       setFormData({
         nom: professeur.nom,
         prenom: professeur.prenom,
@@ -32,7 +37,7 @@ const ProfesseurForm = ({ professeurId, onSuccess, onCancel }) => {
         grade: professeur.grade || '',
         departement: professeur.departement || ''
       })
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement du professeur')
     }
   }
@@ -50,16 +55,23 @@ const ProfesseurForm = ({ professeurId, onSuccess, onCancel }) => {
     setLoading(true)
 
     try {
+      const token = localStorage.getItem('token')
       const dataToSubmit = { ...formData }
       if (professeurId && !dataToSubmit.mot_de_passe) {
         delete dataToSubmit.mot_de_passe
       }
 
-      if (professeurId) {
-        await professeurService.update(professeurId, dataToSubmit)
-      } else {
-        await professeurService.create(dataToSubmit)
-      }
+      const url = professeurId ? `${API_BASE}/professeurs-crud/${professeurId}` : `${API_BASE}/professeurs-crud`
+      const method = professeurId ? 'PUT' : 'POST'
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(dataToSubmit)
+      })
+      if (!response.ok) throw new Error('Failed to save professeur')
       onSuccess()
     } catch (err) {
       setError(err.message || 'Erreur lors de l\'enregistrement')

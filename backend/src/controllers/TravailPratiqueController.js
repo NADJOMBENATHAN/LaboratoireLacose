@@ -1,4 +1,5 @@
 const TravailPratiqueService = require('../services/TravailPratiqueService');
+const { NotFoundError } = require('../middleware/errorHandler');
 
 class TravailPratiqueController {
     constructor() {
@@ -6,78 +7,47 @@ class TravailPratiqueController {
     }
 
     async getAll(req, res) {
-        try {
-            const travaux = await this.travailPratiqueService.getAllTravauxPratiques();
-            res.json(travaux);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const travaux = await this.travailPratiqueService.getAllTravauxPratiques();
+        res.json(travaux);
     }
 
     async getById(req, res) {
-        try {
-            const tp = await this.travailPratiqueService.getTravailPratiqueById(req.params.id);
-            res.json(tp);
-        } catch (error) {
-            if (error.message === 'Travail pratique non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const tp = await this.travailPratiqueService.getTravailPratiqueById(req.params.id);
+        if (!tp) {
+            throw new NotFoundError('Travail pratique non trouvé');
         }
+        res.json(tp);
     }
 
     async create(req, res) {
-        try {
-            const tp = await this.travailPratiqueService.createTravailPratique(req.body);
-            res.status(201).json(tp);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const tp = await this.travailPratiqueService.createTravailPratique(req.body);
+        res.status(201).json(tp);
     }
 
     async update(req, res) {
-        try {
-            const tp = await this.travailPratiqueService.updateTravailPratique(req.params.id, req.body);
-            res.json(tp);
-        } catch (error) {
-            if (error.message === 'Travail pratique non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const tp = await this.travailPratiqueService.updateTravailPratique(req.params.id, req.body);
+        if (!tp) {
+            throw new NotFoundError('Travail pratique non trouvé');
         }
+        res.json(tp);
     }
 
     async delete(req, res) {
-        try {
-            await this.travailPratiqueService.deleteTravailPratique(req.params.id);
-            res.json({ message: 'Travail pratique supprimé' });
-        } catch (error) {
-            if (error.message === 'Travail pratique non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const result = await this.travailPratiqueService.deleteTravailPratique(req.params.id);
+        if (!result) {
+            throw new NotFoundError('Travail pratique non trouvé');
         }
+        res.json({ message: 'Travail pratique supprimé' });
     }
 
     async getByStatut(req, res) {
-        try {
-            const travaux = await this.travailPratiqueService.getTravauxPratiquesByStatut(req.params.statut);
-            res.json(travaux);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const travaux = await this.travailPratiqueService.getTravauxPratiquesByStatut(req.params.statut);
+        res.json(travaux);
     }
 
     async getByProfesseur(req, res) {
-        try {
-            const travaux = await this.travailPratiqueService.getTravauxPratiquesByProfesseur(req.params.professeurId);
-            res.json(travaux);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const travaux = await this.travailPratiqueService.getTravauxPratiquesByProfesseur(req.params.professeurId);
+        res.json(travaux);
     }
 }
 

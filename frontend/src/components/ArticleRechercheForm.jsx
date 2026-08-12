@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
-import articleRechercheService from '../services/articleRechercheService'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const ArticleRechercheForm = ({ articleId, onSuccess, onCancel }) => {
+  const { user } = useAuth()
   const [formData, setFormData] = useState({
     titre: '',
     resume: '',
     contenu: '',
-    auteur_id: '',
+    auteur_id: user?.id || '',
     statut: 'brouillon'
   })
   const [error, setError] = useState('')
@@ -20,15 +23,16 @@ const ArticleRechercheForm = ({ articleId, onSuccess, onCancel }) => {
 
   const loadArticle = async () => {
     try {
-      const article = await articleRechercheService.getById(articleId)
+      const response = await fetch(`${API_BASE}/publications/${articleId}`)
+      const article = await response.json()
       setFormData({
         titre: article.titre,
         resume: article.resume || '',
         contenu: article.contenu || '',
-        auteur_id: article.auteur_id || '',
+        auteur_id: article.auteur_id || user?.id || '',
         statut: article.statut || 'brouillon'
       })
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement de l\'article')
     }
   }
@@ -46,11 +50,18 @@ const ArticleRechercheForm = ({ articleId, onSuccess, onCancel }) => {
     setLoading(true)
 
     try {
-      if (articleId) {
-        await articleRechercheService.update(articleId, formData)
-      } else {
-        await articleRechercheService.create(formData)
-      }
+      const token = localStorage.getItem('token')
+      const url = articleId ? `${API_BASE}/publications/${articleId}` : `${API_BASE}/publications`
+      const method = articleId ? 'PUT' : 'POST'
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      })
+      if (!response.ok) throw new Error('Failed to save article')
       onSuccess()
     } catch (err) {
       setError(err.message || 'Erreur lors de l\'enregistrement')
@@ -108,14 +119,17 @@ const ArticleRechercheForm = ({ articleId, onSuccess, onCancel }) => {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Auteur ID</label>
+          <label className="form-label">Auteur</label>
           <input
-            type="number"
+            type="text"
+            value={`${user?.prenom} ${user?.nom}`}
+            className="form-input"
+            disabled
+          />
+          <input
+            type="hidden"
             name="auteur_id"
             value={formData.auteur_id}
-            onChange={handleChange}
-            className="form-input"
-            placeholder="ID de l'auteur"
           />
         </div>
 

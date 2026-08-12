@@ -40,27 +40,42 @@ class EvaluationService {
     async createEvaluation(data) {
         const { soumission_id, professeur_id, note } = data;
         
+        console.log('Création évaluation - Données:', { soumission_id, professeur_id, note });
+        
         const soumission = await this.soumissionRepository.findById(soumission_id);
         if (!soumission) {
+            console.error('Soumission non trouvée:', soumission_id);
             throw new Error('Soumission non trouvée');
         }
         
-        const professeur = await this.professeurRepository.findById(professeurId);
+        const professeur = await this.professeurRepository.findById(professeur_id);
         if (!professeur) {
+            console.error('Professeur non trouvé:', professeur_id);
             throw new Error('Professeur non trouvé');
         }
         
         if (note < 0 || note > 20) {
+            console.error('Note invalide:', note);
             throw new Error('La note doit être entre 0 et 20');
         }
         
         const existing = await this.evaluationRepository.findBySoumissionAndProfesseur(soumission_id, professeur_id);
         if (existing) {
+            console.error('Évaluation déjà existante pour soumission:', soumission_id, 'professeur:', professeur_id);
             throw new Error('Évaluation déjà existante pour cette soumission');
         }
         
         data.date_evaluation = new Date();
-        return await this.evaluationRepository.create(data);
+        console.log('Création évaluation - Données finales:', data);
+        
+        try {
+            const result = await this.evaluationRepository.create(data);
+            console.log('Évaluation créée avec succès:', result);
+            return result;
+        } catch (error) {
+            console.error('Erreur lors de la création de l\'évaluation:', error);
+            throw error;
+        }
     }
 
     async updateEvaluation(id, data) {

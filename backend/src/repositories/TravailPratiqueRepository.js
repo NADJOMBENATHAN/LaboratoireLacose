@@ -7,15 +7,20 @@ class TravailPratiqueRepository extends BaseRepository {
     }
 
     async findAllWithDetails() {
-        const result = await this.pool.query(`
-            SELECT tp.*, 
-                   l.nom as laboratoire_nom,
-                   u.nom || ' ' || u.prenom as professeur_nom
-            FROM travaux_pratiques tp
-            LEFT JOIN laboratoires l ON tp.laboratoire_id = l.id
-            LEFT JOIN utilisateurs u ON tp.professeur_id = u.id
-        `);
-        return result.rows;
+        try {
+            const result = await this.pool.query(`
+                SELECT tp.*, 
+                       l.nom as laboratoire_nom,
+                       u.nom || ' ' || u.prenom as professeur_nom
+                FROM travaux_pratiques tp
+                LEFT JOIN laboratoires l ON tp.laboratoire_id = l.id
+                LEFT JOIN utilisateurs u ON tp.professeur_id = u.id
+            `);
+            return result.rows;
+        } catch (error) {
+            console.error('Erreur dans findAllWithDetails:', error);
+            throw error;
+        }
     }
 
     async findByStatut(statut) {

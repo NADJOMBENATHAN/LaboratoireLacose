@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import professeurService from '../services/professeurService'
 import ProfesseurForm from './ProfesseurForm'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const ProfesseurList = () => {
   const [professeurs, setProfesseurs] = useState([])
@@ -16,9 +17,13 @@ const ProfesseurList = () => {
   const loadProfesseurs = async () => {
     try {
       setLoading(true)
-      const data = await professeurService.getAll()
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/professeurs-crud`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await response.json()
       setProfesseurs(data)
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement des professeurs')
     } finally {
       setLoading(false)
@@ -41,9 +46,14 @@ const ProfesseurList = () => {
     }
 
     try {
-      await professeurService.delete(id)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/professeurs-crud/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Failed to delete professeur')
       loadProfesseurs()
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la suppression')
     }
   }

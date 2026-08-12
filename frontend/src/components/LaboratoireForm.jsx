@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import laboratoireService from '../services/laboratoireService'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const LaboratoireForm = ({ laboratoireId, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -21,7 +22,8 @@ const LaboratoireForm = ({ laboratoireId, onSuccess, onCancel }) => {
 
   const loadLaboratoire = async () => {
     try {
-      const laboratoire = await laboratoireService.getById(laboratoireId)
+      const response = await fetch(`${API_BASE}/laboratoires/${laboratoireId}`)
+      const laboratoire = await response.json()
       setFormData({
         nom: laboratoire.nom,
         description: laboratoire.description || '',
@@ -30,7 +32,7 @@ const LaboratoireForm = ({ laboratoireId, onSuccess, onCancel }) => {
         capacite: laboratoire.capacite || '',
         equipements: laboratoire.equipements || ''
       })
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement du laboratoire')
     }
   }
@@ -48,16 +50,23 @@ const LaboratoireForm = ({ laboratoireId, onSuccess, onCancel }) => {
     setLoading(true)
 
     try {
+      const token = localStorage.getItem('token')
       const dataToSubmit = {
         ...formData,
         capacite: formData.capacite ? parseInt(formData.capacite) : null
       }
 
-      if (laboratoireId) {
-        await laboratoireService.update(laboratoireId, dataToSubmit)
-      } else {
-        await laboratoireService.create(dataToSubmit)
-      }
+      const url = laboratoireId ? `${API_BASE}/laboratoires/${laboratoireId}` : `${API_BASE}/laboratoires`
+      const method = laboratoireId ? 'PUT' : 'POST'
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(dataToSubmit)
+      })
+      if (!response.ok) throw new Error('Failed to save laboratoire')
       onSuccess()
     } catch (err) {
       setError(err.message || 'Erreur lors de l\'enregistrement')

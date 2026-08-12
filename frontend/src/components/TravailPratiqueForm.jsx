@@ -1,38 +1,54 @@
 import { useState, useEffect } from 'react'
-import travailPratiqueService from '../services/travailPratiqueService'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const TravailPratiqueForm = ({ tpId, onSuccess, onCancel }) => {
+  const { user } = useAuth()
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
     laboratoire_id: '',
-    professeur_id: '',
+    professeur_id: user?.id || '',
     date_debut: '',
     date_fin: '',
     statut: 'planifie'
   })
+  const [laboratoires, setLaboratoires] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    loadLaboratoires()
     if (tpId) {
       loadTP()
     }
   }, [tpId])
 
+  const loadLaboratoires = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/laboratoires`)
+      const data = await response.json()
+      setLaboratoires(data)
+    } catch (err) {
+      console.error('Erreur lors du chargement des laboratoires:', err)
+    }
+  }
+
   const loadTP = async () => {
     try {
-      const tp = await travailPratiqueService.getById(tpId)
+      const response = await fetch(`${API_BASE}/projets/${tpId}`)
+      const tp = await response.json()
       setFormData({
         titre: tp.titre,
         description: tp.description || '',
         laboratoire_id: tp.laboratoire_id || '',
-        professeur_id: tp.professeur_id || '',
+        professeur_id: tp.professeur_id || user?.id || '',
         date_debut: tp.date_debut || '',
         date_fin: tp.date_fin || '',
         statut: tp.statut || 'planifie'
       })
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement du travail pratique')
     }
   }
@@ -50,10 +66,20 @@ const TravailPratiqueForm = ({ tpId, onSuccess, onCancel }) => {
     setLoading(true)
 
     try {
-      if (tpId) {
-        await travailPratiqueService.update(tpId, formData)
-      } else {
-        await travailPratiqueService.create(formData)
+      const token = localStorage.getItem('token')
+      const url = tpId ? `${API_BASE}/projets/${tpId}` : `${API_BASE}/projets`
+      const method = tpId ? 'PUT' : 'POST'
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.errors ? errorData.errors.map(e => e.msg).join(', ') : 'Failed to save travail pratique')
       }
       onSuccess()
     } catch (err) {
@@ -99,26 +125,33 @@ const TravailPratiqueForm = ({ tpId, onSuccess, onCancel }) => {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Laboratoire ID</label>
-          <input
-            type="number"
+          <label className="form-label">Laboratoire</label>
+          <select
             name="laboratoire_id"
             value={formData.laboratoire_id}
             onChange={handleChange}
             className="form-input"
-            placeholder="ID du laboratoire"
-          />
+          >
+            <option value="">Sélectionner un laboratoire</option>
+            {laboratoires.map(lab => (
+              <option key={lab.id} value={lab.id}>{lab.nom}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Professeur ID</label>
+          <label className="form-label">Professeur responsable</label>
           <input
-            type="number"
+            type="text"
+            name="professeur_id"
+            value={`${user?.prenom} ${user?.nom}`}
+            className="form-input"
+            disabled
+          />
+          <input
+            type="hidden"
             name="professeur_id"
             value={formData.professeur_id}
-            onChange={handleChange}
-            className="form-input"
-            placeholder="ID du professeur responsable"
           />
         </div>
 

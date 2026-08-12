@@ -1,4 +1,5 @@
 const ProfesseurService = require('../services/ProfesseurService');
+const { NotFoundError, ConflictError } = require('../middleware/errorHandler');
 
 class ProfesseurController {
     constructor() {
@@ -6,91 +7,52 @@ class ProfesseurController {
     }
 
     async getAll(req, res) {
-        try {
-            const professeurs = await this.professeurService.getAllProfesseurs();
-            res.json(professeurs);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const professeurs = await this.professeurService.getAllProfesseurs();
+        res.json(professeurs);
     }
 
     async getById(req, res) {
-        try {
-            const professeur = await this.professeurService.getProfesseurById(req.params.id);
-            res.json(professeur);
-        } catch (error) {
-            if (error.message === 'Professeur non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const professeur = await this.professeurService.getProfesseurById(req.params.id);
+        if (!professeur) {
+            throw new NotFoundError('Professeur non trouvé');
         }
+        res.json(professeur);
     }
 
     async getBySpecialite(req, res) {
-        try {
-            const professeurs = await this.professeurService.getProfesseursBySpecialite(req.params.specialite);
-            res.json(professeurs);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const professeurs = await this.professeurService.getProfesseursBySpecialite(req.params.specialite);
+        res.json(professeurs);
     }
 
     async getByDepartement(req, res) {
-        try {
-            const professeurs = await this.professeurService.getProfesseursByDepartement(req.params.departement);
-            res.json(professeurs);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const professeurs = await this.professeurService.getProfesseursByDepartement(req.params.departement);
+        res.json(professeurs);
     }
 
     async getByGrade(req, res) {
-        try {
-            const professeurs = await this.professeurService.getProfesseursByGrade(req.params.grade);
-            res.json(professeurs);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const professeurs = await this.professeurService.getProfesseursByGrade(req.params.grade);
+        res.json(professeurs);
     }
 
     async create(req, res) {
-        try {
-            const professeur = await this.professeurService.createProfesseur(req.body);
-            res.status(201).json(professeur);
-        } catch (error) {
-            if (error.message === 'Email déjà utilisé') {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
-        }
+        const professeur = await this.professeurService.createProfesseur(req.body);
+        res.status(201).json(professeur);
     }
 
     async update(req, res) {
-        try {
-            const professeur = await this.professeurService.updateProfesseur(req.params.id, req.body);
-            res.json(professeur);
-        } catch (error) {
-            if (error.message === 'Professeur non trouvé' || error.message === 'Email déjà utilisé') {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const professeur = await this.professeurService.updateProfesseur(req.params.id, req.body);
+        if (!professeur) {
+            throw new NotFoundError('Professeur non trouvé');
         }
+        res.json(professeur);
     }
 
     async delete(req, res) {
-        try {
-            await this.professeurService.deleteProfesseur(req.params.id);
-            res.json({ message: 'Professeur supprimé' });
-        } catch (error) {
-            if (error.message === 'Professeur non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const result = await this.professeurService.deleteProfesseur(req.params.id);
+        if (!result) {
+            throw new NotFoundError('Professeur non trouvé');
         }
+        res.json({ message: 'Professeur supprimé' });
     }
 }
 

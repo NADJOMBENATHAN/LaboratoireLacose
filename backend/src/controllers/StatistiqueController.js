@@ -6,12 +6,8 @@ class StatistiqueController {
     }
 
     async getStatistiques(req, res) {
-        try {
-            const stats = await this.statistiqueService.getStatistiques();
-            res.json(stats);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const stats = await this.statistiqueService.getStatistiques();
+        res.json(stats);
     }
 }
 

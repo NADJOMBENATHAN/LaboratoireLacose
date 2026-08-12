@@ -2,30 +2,16 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Administration from './pages/Administration'
+import DashboardProfesseur from './pages/DashboardProfesseur'
 import PrivateRoute from './components/PrivateRoute'
-import { useAuth } from './context/AuthContext'
 import './App.css'
 
 function App() {
-  const { isAuthenticated } = useAuth()
   const location = useLocation()
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
+  const isDashboard = location.pathname === '/dashboard-professeur'
 
   return (
-    <div className="app-container">
-      {/* Header - pas affiché sur les pages d'authentification */}
-      {!isAuthPage && (
-        <header className="app-header">
-          <div className="header-content">
-            <div className="logo-section">
-              <h1 className="logo-text">LaCOSE</h1>
-            </div>
-          </div>
-        </header>
-      )}
-      
-      {/* Main Content */}
-      <main className="app-main">
+    <main className={`app-main ${isDashboard ? 'full-width' : ''}`}>
         <div className="main-content">
           <Routes>
             {/* Route Accueil */}
@@ -62,10 +48,16 @@ function App() {
                 <Administration />
               </PrivateRoute>
             } />
+            
+            {/* Route Dashboard Professeur protégée */}
+            <Route path="/dashboard-professeur" element={
+              <PrivateRoute>
+                <DashboardProfesseur />
+              </PrivateRoute>
+            } />
           </Routes>
         </div>
       </main>
-    </div>
   )
 }
 

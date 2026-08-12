@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import administrateurService from '../services/administrateurService'
 import AdminForm from './AdminForm'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const AdminList = () => {
   const [admins, setAdmins] = useState([])
@@ -16,7 +17,11 @@ const AdminList = () => {
   const loadAdmins = async () => {
     try {
       setLoading(true)
-      const data = await administrateurService.getAll()
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/administrateurs`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await response.json()
       setAdmins(data)
     } catch (err) {
       setError('Erreur lors du chargement des administrateurs')
@@ -41,9 +46,14 @@ const AdminList = () => {
     }
 
     try {
-      await administrateurService.delete(id)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/administrateurs/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Failed to delete admin')
       loadAdmins()
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la suppression')
     }
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import partenaireService from '../services/partenaireService'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const PartenaireForm = ({ partenaireId, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -21,7 +22,8 @@ const PartenaireForm = ({ partenaireId, onSuccess, onCancel }) => {
 
   const loadPartenaire = async () => {
     try {
-      const partenaire = await partenaireService.getById(partenaireId)
+      const response = await fetch(`${API_BASE}/partenaires/${partenaireId}`)
+      const partenaire = await response.json()
       setFormData({
         nom: partenaire.nom,
         prenom: partenaire.prenom,
@@ -30,7 +32,7 @@ const PartenaireForm = ({ partenaireId, onSuccess, onCancel }) => {
         nom_entreprise: partenaire.nom_entreprise || '',
         type_partenariat: partenaire.type_partenariat || ''
       })
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement du partenaire')
     }
   }
@@ -48,16 +50,23 @@ const PartenaireForm = ({ partenaireId, onSuccess, onCancel }) => {
     setLoading(true)
 
     try {
+      const token = localStorage.getItem('token')
       const dataToSubmit = { ...formData }
       if (partenaireId && !dataToSubmit.mot_de_passe) {
         delete dataToSubmit.mot_de_passe
       }
 
-      if (partenaireId) {
-        await partenaireService.update(partenaireId, dataToSubmit)
-      } else {
-        await partenaireService.create(dataToSubmit)
-      }
+      const url = partenaireId ? `${API_BASE}/partenaires/${partenaireId}` : `${API_BASE}/partenaires`
+      const method = partenaireId ? 'PUT' : 'POST'
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(dataToSubmit)
+      })
+      if (!response.ok) throw new Error('Failed to save partenaire')
       onSuccess()
     } catch (err) {
       setError(err.message || 'Erreur lors de l\'enregistrement')

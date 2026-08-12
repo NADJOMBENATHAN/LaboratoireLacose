@@ -1,4 +1,5 @@
 const PartenaireService = require('../services/PartenaireService');
+const { NotFoundError, ConflictError } = require('../middleware/errorHandler');
 
 class PartenaireController {
     constructor() {
@@ -6,82 +7,47 @@ class PartenaireController {
     }
 
     async getAll(req, res) {
-        try {
-            const partenaires = await this.partenaireService.getAllPartenaires();
-            res.json(partenaires);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const partenaires = await this.partenaireService.getAllPartenaires();
+        res.json(partenaires);
     }
 
     async getById(req, res) {
-        try {
-            const partenaire = await this.partenaireService.getPartenaireById(req.params.id);
-            res.json(partenaire);
-        } catch (error) {
-            if (error.message === 'Partenaire non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const partenaire = await this.partenaireService.getPartenaireById(req.params.id);
+        if (!partenaire) {
+            throw new NotFoundError('Partenaire non trouvé');
         }
+        res.json(partenaire);
     }
 
     async getByEntreprise(req, res) {
-        try {
-            const partenaires = await this.partenaireService.getPartenairesByEntreprise(req.params.entreprise);
-            res.json(partenaires);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const partenaires = await this.partenaireService.getPartenairesByEntreprise(req.params.entreprise);
+        res.json(partenaires);
     }
 
     async getByType(req, res) {
-        try {
-            const partenaires = await this.partenaireService.getPartenairesByType(req.params.type);
-            res.json(partenaires);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const partenaires = await this.partenaireService.getPartenairesByType(req.params.type);
+        res.json(partenaires);
     }
 
     async create(req, res) {
-        try {
-            const partenaire = await this.partenaireService.createPartenaire(req.body);
-            res.status(201).json(partenaire);
-        } catch (error) {
-            if (error.message === 'Email déjà utilisé') {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
-        }
+        const partenaire = await this.partenaireService.createPartenaire(req.body);
+        res.status(201).json(partenaire);
     }
 
     async update(req, res) {
-        try {
-            const partenaire = await this.partenaireService.updatePartenaire(req.params.id, req.body);
-            res.json(partenaire);
-        } catch (error) {
-            if (error.message === 'Partenaire non trouvé' || error.message === 'Email déjà utilisé') {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const partenaire = await this.partenaireService.updatePartenaire(req.params.id, req.body);
+        if (!partenaire) {
+            throw new NotFoundError('Partenaire non trouvé');
         }
+        res.json(partenaire);
     }
 
     async delete(req, res) {
-        try {
-            await this.partenaireService.deletePartenaire(req.params.id);
-            res.json({ message: 'Partenaire supprimé' });
-        } catch (error) {
-            if (error.message === 'Partenaire non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const result = await this.partenaireService.deletePartenaire(req.params.id);
+        if (!result) {
+            throw new NotFoundError('Partenaire non trouvé');
         }
+        res.json({ message: 'Partenaire supprimé' });
     }
 }
 

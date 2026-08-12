@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import articleRechercheService from '../services/articleRechercheService'
 import ArticleRechercheForm from './ArticleRechercheForm'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const ArticleRechercheList = () => {
   const [articles, setArticles] = useState([])
@@ -16,9 +17,10 @@ const ArticleRechercheList = () => {
   const loadArticles = async () => {
     try {
       setLoading(true)
-      const data = await articleRechercheService.getAll()
+      const response = await fetch(`${API_BASE}/publications`)
+      const data = await response.json()
       setArticles(data)
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement des publications')
     } finally {
       setLoading(false)
@@ -41,18 +43,28 @@ const ArticleRechercheList = () => {
     }
 
     try {
-      await articleRechercheService.delete(id)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/publications/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Failed to delete article')
       loadArticles()
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la suppression')
     }
   }
 
   const handlePublish = async (id) => {
     try {
-      await articleRechercheService.publier(id)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/publications/${id}/publier`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Failed to publish article')
       loadArticles()
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la publication')
     }
   }

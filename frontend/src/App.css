@@ -61,6 +61,11 @@
   padding: 2rem 1rem;
 }
 
+.app-main.full-width {
+  max-width: 100%;
+  padding: 0;
+}
+
 .main-content {
   width: 100%;
 }
@@ -276,7 +281,7 @@
 }
 
 .admin-header-content {
-  max-width: 56rem;
+  max-width: 36rem;
   margin: 0 auto;
   padding: 1rem 1rem;
   display: flex;
@@ -314,6 +319,7 @@
   padding-right: 1rem;
   transition: padding-left 0.3s ease;
   min-height: 100vh;
+  width: 100%;
 }
 
 .admin-main.sidebar-expanded {
@@ -484,7 +490,7 @@
 
 /* Dashboard Section */
 .dashboard-section {
-  margin-bottom: 2rem;
+  margin-bottom: 0.2rem;
 }
 
 .dashboard-card {
@@ -520,6 +526,8 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.5);
   margin-bottom: 2rem;
+  width: 100%;
+  max-width: 100%;
 }
 
 .section-header {

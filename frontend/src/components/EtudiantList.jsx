@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import etudiantService from '../services/etudiantService'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const EtudiantList = () => {
   const [etudiants, setEtudiants] = useState([])
@@ -13,9 +14,13 @@ const EtudiantList = () => {
   const loadEtudiants = async () => {
     try {
       setLoading(true)
-      const data = await etudiantService.getAll()
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/etudiants-crud`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await response.json()
       setEtudiants(data)
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement des étudiants')
     } finally {
       setLoading(false)

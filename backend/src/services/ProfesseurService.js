@@ -6,7 +6,7 @@ class ProfesseurService {
     }
 
     async getAllProfesseurs() {
-        const professeurs = await this.professeurRepository.findAll();
+        const professeurs = await this.professeurRepository.findAllWithUsers();
         return professeurs.map(p => {
             delete p.mot_de_passe;
             return p;

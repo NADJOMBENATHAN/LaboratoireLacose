@@ -1,95 +1,100 @@
 const EvaluationService = require('../services/EvaluationService');
+const { NotFoundError, ValidationError } = require('../middleware/errorHandler');
 
+/**
+ * Classe EvaluationController
+ * Contrôleur pour la gestion des requêtes HTTP liées aux évaluations
+ * Gère les routes CRUD et les réponses HTTP appropriées
+ */
 class EvaluationController {
     constructor() {
         this.evaluationService = EvaluationService;
     }
 
+    /**
+     * Méthode getAll
+     * Récupère toutes les évaluations
+     * @param {Object} req - Requête HTTP
+     * @param {Object} res - Réponse HTTP
+     */
     async getAll(req, res) {
-        try {
-            const evaluations = await this.evaluationService.getAllEvaluations();
-            res.json(evaluations);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const evaluations = await this.evaluationService.getAllEvaluations();
+        res.json(evaluations);
     }
 
+    /**
+     * Méthode getById
+     * Récupère une évaluation par son ID
+     * @param {Object} req - Requête HTTP avec paramètre id
+     * @param {Object} res - Réponse HTTP
+     */
     async getById(req, res) {
-        try {
-            const evaluation = await this.evaluationService.getEvaluationById(req.params.id);
-            res.json(evaluation);
-        } catch (error) {
-            if (error.message === 'Évaluation non trouvée') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const evaluation = await this.evaluationService.getEvaluationById(req.params.id);
+        if (!evaluation) {
+            throw new NotFoundError('Évaluation non trouvée');
         }
+        res.json(evaluation);
     }
 
+    /**
+     * Méthode getBySoumission
+     * Récupère les évaluations par soumission
+     * @param {Object} req - Requête HTTP avec paramètre soumissionId
+     * @param {Object} res - Réponse HTTP
+     */
     async getBySoumission(req, res) {
-        try {
-            const evaluations = await this.evaluationService.getEvaluationsBySoumission(req.params.soumissionId);
-            res.json(evaluations);
-        } catch (error) {
-            if (error.message === 'Soumission non trouvée') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
-        }
+        const evaluations = await this.evaluationService.getEvaluationsBySoumission(req.params.soumissionId);
+        res.json(evaluations);
     }
 
+    /**
+     * Méthode getByProfesseur
+     * Récupère les évaluations par professeur
+     * @param {Object} req - Requête HTTP avec paramètre professeurId
+     * @param {Object} res - Réponse HTTP
+     */
     async getByProfesseur(req, res) {
-        try {
-            const evaluations = await this.evaluationService.getEvaluationsByProfesseur(req.params.professeurId);
-            res.json(evaluations);
-        } catch (error) {
-            if (error.message === 'Professeur non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
-        }
+        const evaluations = await this.evaluationService.getEvaluationsByProfesseur(req.params.professeurId);
+        res.json(evaluations);
     }
 
+    /**
+     * Méthode create
+     * Crée une nouvelle évaluation
+     * @param {Object} req - Requête HTTP avec corps de données
+     * @param {Object} res - Réponse HTTP
+     */
     async create(req, res) {
-        try {
-            const evaluation = await this.evaluationService.createEvaluation(req.body);
-            res.status(201).json(evaluation);
-        } catch (error) {
-            if (error.message === 'Soumission non trouvée' || error.message === 'Professeur non trouvé' || error.message === 'La note doit être entre 0 et 20' || error.message === 'Évaluation déjà existante pour cette soumission') {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
-        }
+        const evaluation = await this.evaluationService.createEvaluation(req.body);
+        res.status(201).json(evaluation);
     }
 
+    /**
+     * Méthode update
+     * Met à jour une évaluation existante
+     * @param {Object} req - Requête HTTP avec paramètre id et corps de données
+     * @param {Object} res - Réponse HTTP
+     */
     async update(req, res) {
-        try {
-            const evaluation = await this.evaluationService.updateEvaluation(req.params.id, req.body);
-            res.json(evaluation);
-        } catch (error) {
-            if (error.message === 'Évaluation non trouvée' || error.message === 'La note doit être entre 0 et 20') {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const evaluation = await this.evaluationService.updateEvaluation(req.params.id, req.body);
+        if (!evaluation) {
+            throw new NotFoundError('Évaluation non trouvée');
         }
+        res.json(evaluation);
     }
 
+    /**
+     * Méthode delete
+     * Supprime une évaluation
+     * @param {Object} req - Requête HTTP avec paramètre id
+     * @param {Object} res - Réponse HTTP
+     */
     async delete(req, res) {
-        try {
-            await this.evaluationService.deleteEvaluation(req.params.id);
-            res.json({ message: 'Évaluation supprimée' });
-        } catch (error) {
-            if (error.message === 'Évaluation non trouvée') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const result = await this.evaluationService.deleteEvaluation(req.params.id);
+        if (!result) {
+            throw new NotFoundError('Évaluation non trouvée');
         }
+        res.json({ message: 'Évaluation supprimée' });
     }
 }
 

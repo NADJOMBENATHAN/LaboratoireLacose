@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import laboratoireService from '../services/laboratoireService'
 import LaboratoireForm from './LaboratoireForm'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const LaboratoireList = () => {
   const [laboratoires, setLaboratoires] = useState([])
@@ -16,9 +17,10 @@ const LaboratoireList = () => {
   const loadLaboratoires = async () => {
     try {
       setLoading(true)
-      const data = await laboratoireService.getAll()
+      const response = await fetch(`${API_BASE}/laboratoires`)
+      const data = await response.json()
       setLaboratoires(data)
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement des laboratoires')
     } finally {
       setLoading(false)
@@ -41,9 +43,14 @@ const LaboratoireList = () => {
     }
 
     try {
-      await laboratoireService.delete(id)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/laboratoires/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Failed to delete laboratoire')
       loadLaboratoires()
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la suppression')
     }
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import administrateurService from '../services/administrateurService'
+
+const API_BASE = 'http://localhost:5000/api'
 
 const AdminForm = ({ adminId, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -20,7 +21,11 @@ const AdminForm = ({ adminId, onSuccess, onCancel }) => {
 
   const loadAdmin = async () => {
     try {
-      const admin = await administrateurService.getById(adminId)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/administrateurs/${adminId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const admin = await response.json()
       setFormData({
         nom: admin.nom,
         prenom: admin.prenom,
@@ -28,9 +33,9 @@ const AdminForm = ({ adminId, onSuccess, onCancel }) => {
         mot_de_passe: '',
         niveau_acces: admin.niveau_acces
       })
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement de l\'administrateur')
-    }
+    } finally { }
   }
 
   const handleChange = (e) => {
@@ -46,16 +51,22 @@ const AdminForm = ({ adminId, onSuccess, onCancel }) => {
     setLoading(true)
 
     try {
+      const token = localStorage.getItem('token')
       const dataToSubmit = { ...formData }
       if (adminId && !dataToSubmit.mot_de_passe) {
         delete dataToSubmit.mot_de_passe
       }
-
-      if (adminId) {
-        await administrateurService.update(adminId, dataToSubmit)
-      } else {
-        await administrateurService.create(dataToSubmit)
-      }
+      const url = adminId ? `${API_BASE}/administrateurs/${adminId}` : `${API_BASE}/administrateurs`
+      const method = adminId ? 'PUT' : 'POST'
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(dataToSubmit)
+      })
+      if (!response.ok) throw new Error('Failed to save admin')
       onSuccess()
     } catch (err) {
       setError(err.message || 'Erreur lors de l\'enregistrement')

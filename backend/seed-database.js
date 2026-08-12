@@ -1,217 +1,22 @@
-const pool = require('../../db');
+const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
+require('dotenv').config();
+
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+});
 
 const SALT_ROUNDS = 10;
 
-const initDatabase = async () => {
+async function seedDatabase() {
     try {
-        console.log('Initialisation de la base de données...');
-
-        // Table utilisateurs (table de base)
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS utilisateurs (
-                id SERIAL PRIMARY KEY,
-                nom VARCHAR(100) NOT NULL,
-                prenom VARCHAR(100) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                mot_de_passe VARCHAR(255) NOT NULL,
-                role VARCHAR(50) NOT NULL,
-                date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Table administrateurs
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS administrateurs (
-                id INTEGER PRIMARY KEY REFERENCES utilisateurs(id) ON DELETE CASCADE,
-                niveau_acces INTEGER DEFAULT 1
-            );
-        `);
-
-        // Table étudiants
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS etudiants (
-                id INTEGER PRIMARY KEY REFERENCES utilisateurs(id) ON DELETE CASCADE,
-                numero_etudiant VARCHAR(20) UNIQUE NOT NULL,
-                niveau_etude VARCHAR(50),
-                filiere VARCHAR(100)
-            );
-        `);
-
-        // Table professeurs
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS professeurs (
-                id INTEGER PRIMARY KEY REFERENCES utilisateurs(id) ON DELETE CASCADE,
-                specialite VARCHAR(100),
-                departement VARCHAR(100),
-                grade VARCHAR(50)
-            );
-        `);
-
-        // Table partenaires
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS partenaires (
-                id SERIAL PRIMARY KEY,
-                nom VARCHAR(100) NOT NULL,
-                prenom VARCHAR(100) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                mot_de_passe VARCHAR(255) NOT NULL,
-                nom_entreprise VARCHAR(200),
-                type_partenariat VARCHAR(100),
-                date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Table laboratoires
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS laboratoires (
-                id SERIAL PRIMARY KEY,
-                nom VARCHAR(200) NOT NULL,
-                description TEXT,
-                responsable_id INTEGER REFERENCES professeurs(id) ON DELETE SET NULL,
-                date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Table travaux_pratiques (projets)
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS travaux_pratiques (
-                id SERIAL PRIMARY KEY,
-                titre VARCHAR(200) NOT NULL,
-                description TEXT,
-                laboratoire_id INTEGER REFERENCES laboratoires(id) ON DELETE SET NULL,
-                professeur_id INTEGER REFERENCES professeurs(id) ON DELETE SET NULL,
-                date_debut DATE,
-                date_fin DATE,
-                statut VARCHAR(50) DEFAULT 'planifie',
-                date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Table articles_recherche (publications)
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS articles_recherche (
-                id SERIAL PRIMARY KEY,
-                titre VARCHAR(300) NOT NULL,
-                resume TEXT,
-                contenu TEXT,
-                auteur_id INTEGER REFERENCES professeurs(id) ON DELETE SET NULL,
-                statut VARCHAR(50) DEFAULT 'brouillon',
-                date_publication DATE,
-                date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Table soumissions
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS soumissions (
-                id SERIAL PRIMARY KEY,
-                etudiant_id INTEGER REFERENCES etudiants(id) ON DELETE CASCADE,
-                travail_pratique_id INTEGER REFERENCES travaux_pratiques(id) ON DELETE CASCADE,
-                contenu TEXT,
-                date_soumission TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(etudiant_id, travail_pratique_id)
-            );
-        `);
-
-        // Table evaluations
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS evaluations (
-                id SERIAL PRIMARY KEY,
-                soumission_id INTEGER REFERENCES soumissions(id) ON DELETE CASCADE,
-                professeur_id INTEGER REFERENCES professeurs(id) ON DELETE CASCADE,
-                note DECIMAL(3,2) CHECK (note >= 0 AND note <= 20),
-                commentaire TEXT,
-                date_evaluation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(soumission_id, professeur_id)
-            );
-        `);
-
-        // Table experiences
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS experiences (
-                id SERIAL PRIMARY KEY,
-                travail_pratique_id INTEGER REFERENCES travaux_pratiques(id) ON DELETE CASCADE,
-                titre VARCHAR(200) NOT NULL,
-                description TEXT,
-                difficulte VARCHAR(50),
-                date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Table notifications
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS notifications (
-                id SERIAL PRIMARY KEY,
-                destinataire_id INTEGER REFERENCES utilisateurs(id) ON DELETE CASCADE,
-                type VARCHAR(50) NOT NULL,
-                titre VARCHAR(200) NOT NULL,
-                contenu TEXT,
-                lue BOOLEAN DEFAULT FALSE,
-                date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        console.log('Base de données initialisée avec succès!');
+        console.log('=== Début de l\'initialisation des données de démonstration ===\n');
         
-        // Créer l'administrateur par défaut s'il n'existe pas
-        await createDefaultAdmin();
-        
-        // Ajouter des données de démonstration si la base est vide
-        await seedDemoData();
-        
-    } catch (error) {
-        console.error('Erreur lors de l\'initialisation de la base de données:', error);
-        throw error;
-    }
-};
-
-async function createDefaultAdmin() {
-    try {
-        const existingAdmin = await pool.query(
-            'SELECT id FROM utilisateurs WHERE email = $1',
-            ['admin@lacose.tg']
-        );
-        
-        if (existingAdmin.rows.length === 0) {
-            console.log('Création de l\'administrateur par défaut...');
-            const hashedPassword = await bcrypt.hash('admin123', SALT_ROUNDS);
-            
-            const adminResult = await pool.query(
-                `INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role) 
-                 VALUES ($1, $2, $3, $4, 'administrateur') 
-                 RETURNING id`,
-                ['Admin', 'Système', 'admin@lacose.tg', hashedPassword]
-            );
-            
-            const adminId = adminResult.rows[0].id;
-            
-            await pool.query(
-                `INSERT INTO administrateurs (id, niveau_acces) VALUES ($1, 3)`,
-                [adminId]
-            );
-            
-            console.log('✓ Administrateur créé (admin@lacose.tg / admin123)');
-        }
-    } catch (error) {
-        console.error('Erreur lors de la création de l\'administrateur par défaut:', error);
-    }
-}
-
-async function seedDemoData() {
-    try {
-        // Vérifier si des données de démonstration existent déjà
-        const existingProf = await pool.query(
-            'SELECT id FROM utilisateurs WHERE email = $1',
-            ['jean.dupont@lacose.tg']
-        );
-        
-        if (existingProf.rows.length > 0) {
-            console.log('Données de démonstration déjà présentes.');
-            return;
-        }
-        
-        console.log('\nAjout des données de démonstration...');
+        await pool.query('BEGIN');
         
         // 1. Créer des professeurs de démonstration
         console.log('1. Création des professeurs de démonstration...');
@@ -250,6 +55,7 @@ async function seedDemoData() {
             const userResult = await pool.query(
                 `INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role) 
                  VALUES ($1, $2, $3, $4, 'professeur') 
+                 ON CONFLICT (email) DO UPDATE SET nom = EXCLUDED.nom, prenom = EXCLUDED.prenom
                  RETURNING id`,
                 [prof.nom, prof.prenom, prof.email, prof.mot_de_passe]
             );
@@ -257,15 +63,16 @@ async function seedDemoData() {
             
             await pool.query(
                 `INSERT INTO professeurs (id, specialite, departement, grade) 
-                 VALUES ($1, $2, $3, $4)`,
+                 VALUES ($1, $2, $3, $4) 
+                 ON CONFLICT (id) DO UPDATE SET specialite = EXCLUDED.specialite, departement = EXCLUDED.departement, grade = EXCLUDED.grade`,
                 [userId, prof.specialite, prof.departement, prof.grade]
             );
             professeurIds.push(userId);
-            console.log(`  ✓ ${prof.prenom} ${prof.nom}`);
+            console.log(`  ✓ ${prof.prenom} ${prof.nom} (${prof.email})`);
         }
         
         // 2. Créer des étudiants de démonstration
-        console.log('2. Création des étudiants de démonstration...');
+        console.log('\n2. Création des étudiants de démonstration...');
         const etudiantsData = [
             {
                 nom: 'Petit',
@@ -301,6 +108,7 @@ async function seedDemoData() {
             const userResult = await pool.query(
                 `INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role) 
                  VALUES ($1, $2, $3, $4, 'etudiant') 
+                 ON CONFLICT (email) DO UPDATE SET nom = EXCLUDED.nom, prenom = EXCLUDED.prenom
                  RETURNING id`,
                 [etud.nom, etud.prenom, etud.email, etud.mot_de_passe]
             );
@@ -308,15 +116,16 @@ async function seedDemoData() {
             
             await pool.query(
                 `INSERT INTO etudiants (id, numero_etudiant, niveau_etude, filiere) 
-                 VALUES ($1, $2, $3, $4)`,
+                 VALUES ($1, $2, $3, $4) 
+                 ON CONFLICT (id) DO UPDATE SET numero_etudiant = EXCLUDED.numero_etudiant, niveau_etude = EXCLUDED.niveau_etude, filiere = EXCLUDED.filiere`,
                 [userId, etud.numero_etudiant, etud.niveau_etude, etud.filiere]
             );
             etudiantIds.push(userId);
-            console.log(`  ✓ ${etud.prenom} ${etud.nom}`);
+            console.log(`  ✓ ${etud.prenom} ${etud.nom} (${etud.email})`);
         }
         
         // 3. Créer des partenaires de démonstration
-        console.log('3. Création des partenaires de démonstration...');
+        console.log('\n3. Création des partenaires de démonstration...');
         const partenairesData = [
             {
                 nom: 'Lefevre',
@@ -347,14 +156,15 @@ async function seedDemoData() {
         for (const part of partenairesData) {
             await pool.query(
                 `INSERT INTO partenaires (nom, prenom, email, mot_de_passe, nom_entreprise, type_partenariat) 
-                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                 VALUES ($1, $2, $3, $4, $5, $6) 
+                 ON CONFLICT (email) DO UPDATE SET nom = EXCLUDED.nom, prenom = EXCLUDED.prenom, nom_entreprise = EXCLUDED.nom_entreprise, type_partenariat = EXCLUDED.type_partenariat`,
                 [part.nom, part.prenom, part.email, part.mot_de_passe, part.nom_entreprise, part.type_partenariat]
             );
-            console.log(`  ✓ ${part.prenom} ${part.nom}`);
+            console.log(`  ✓ ${part.prenom} ${part.nom} (${part.nom_entreprise})`);
         }
         
         // 4. Créer des laboratoires de démonstration
-        console.log('4. Création des laboratoires de démonstration...');
+        console.log('\n4. Création des laboratoires de démonstration...');
         const laboratoiresData = [
             {
                 nom: 'Laboratoire d\'Intelligence Artificielle',
@@ -378,15 +188,18 @@ async function seedDemoData() {
             const result = await pool.query(
                 `INSERT INTO laboratoires (nom, description, responsable_id) 
                  VALUES ($1, $2, $3) 
+                 ON CONFLICT DO NOTHING 
                  RETURNING id`,
                 [lab.nom, lab.description, lab.responsable_id]
             );
-            laboratoireIds.push(result.rows[0].id);
-            console.log(`  ✓ ${lab.nom}`);
+            if (result.rows.length > 0) {
+                laboratoireIds.push(result.rows[0].id);
+                console.log(`  ✓ ${lab.nom}`);
+            }
         }
         
         // 5. Créer des travaux pratiques de démonstration
-        console.log('5. Création des travaux pratiques de démonstration...');
+        console.log('\n5. Création des travaux pratiques de démonstration...');
         const travauxPratiquesData = [
             {
                 titre: 'Introduction au Machine Learning',
@@ -424,7 +237,7 @@ async function seedDemoData() {
         }
         
         // 6. Créer des articles de recherche de démonstration
-        console.log('6. Création des articles de recherche de démonstration...');
+        console.log('\n6. Création des articles de recherche de démonstration...');
         const articlesData = [
             {
                 titre: 'Advances in Deep Neural Networks',
@@ -459,7 +272,7 @@ async function seedDemoData() {
         }
         
         // 7. Créer des soumissions de démonstration
-        console.log('7. Création des soumissions de démonstration...');
+        console.log('\n7. Création des soumissions de démonstration...');
         const soumissionsData = [
             {
                 etudiant_id: etudiantIds[0],
@@ -482,15 +295,22 @@ async function seedDemoData() {
             console.log(`  ✓ Soumission créée`);
         }
         
-        console.log('\n✓ Données de démonstration ajoutées avec succès!');
-        console.log('\nComptes de démonstration :');
+        await pool.query('COMMIT');
+        
+        console.log('\n=== Initialisation terminée avec succès ===');
+        console.log('\nComptes de démonstration créés :');
+        console.log('Administrateur : admin@lacose.tg / admin123');
         console.log('Professeurs : jean.dupont@lacose.tg / prof123');
         console.log('Étudiants : lucas.petit@etu.lacose.tg / etu123');
         console.log('Partenaires : sophie.lefevre@techcorp.com / part123');
         
     } catch (error) {
-        console.error('Erreur lors de l\'ajout des données de démonstration:', error);
+        await pool.query('ROLLBACK');
+        console.error('Erreur lors de l\'initialisation:', error);
+        throw error;
+    } finally {
+        await pool.end();
     }
 }
 
-module.exports = initDatabase;
+seedDatabase();

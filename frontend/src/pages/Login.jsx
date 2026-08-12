@@ -9,16 +9,38 @@ const Login = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    // Simulation d'authentification
-    if (email === 'admin@lacose.tg' && password === 'admin123') {
-      login({ email, role: 'admin' })
-      navigate('/administration')
-    } else {
-      setError('Email ou mot de passe incorrect')
+    try {
+      const response = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.message || 'Email ou mot de passe incorrect')
+        return
+      }
+
+      login(data.utilisateur, data.token)
+      
+      // Redirection selon le rôle
+      if (data.utilisateur.role === 'professeur') {
+        navigate('/dashboard-professeur')
+      } else if (data.utilisateur.role === 'administrateur') {
+        navigate('/administration')
+      } else {
+        navigate('/')
+      }
+    } catch {
+      setError('Erreur de connexion au serveur')
     }
   }
 

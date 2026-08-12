@@ -1,4 +1,5 @@
 const SoumissionService = require('../services/SoumissionService');
+const { NotFoundError, ConflictError } = require('../middleware/errorHandler');
 
 class SoumissionController {
     constructor() {
@@ -6,90 +7,47 @@ class SoumissionController {
     }
 
     async getAll(req, res) {
-        try {
-            const soumissions = await this.soumissionService.getAllSoumissions();
-            res.json(soumissions);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+        const soumissions = await this.soumissionService.getAllSoumissions();
+        res.json(soumissions);
     }
 
     async getById(req, res) {
-        try {
-            const soumission = await this.soumissionService.getSoumissionById(req.params.id);
-            res.json(soumission);
-        } catch (error) {
-            if (error.message === 'Soumission non trouvée') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const soumission = await this.soumissionService.getSoumissionById(req.params.id);
+        if (!soumission) {
+            throw new NotFoundError('Soumission non trouvée');
         }
+        res.json(soumission);
     }
 
     async getByEtudiant(req, res) {
-        try {
-            const soumissions = await this.soumissionService.getSoumissionsByEtudiant(req.params.etudiantId);
-            res.json(soumissions);
-        } catch (error) {
-            if (error.message === 'Étudiant non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
-        }
+        const soumissions = await this.soumissionService.getSoumissionsByEtudiant(req.params.etudiantId);
+        res.json(soumissions);
     }
 
     async getByTravailPratique(req, res) {
-        try {
-            const soumissions = await this.soumissionService.getSoumissionsByTravailPratique(req.params.tpId);
-            res.json(soumissions);
-        } catch (error) {
-            if (error.message === 'Travail pratique non trouvé') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
-        }
+        const soumissions = await this.soumissionService.getSoumissionsByTravailPratique(req.params.tpId);
+        res.json(soumissions);
     }
 
     async create(req, res) {
-        try {
-            const soumission = await this.soumissionService.createSoumission(req.body);
-            res.status(201).json(soumission);
-        } catch (error) {
-            if (error.message === 'Étudiant non trouvé' || error.message === 'Travail pratique non trouvé' || error.message === 'Soumission déjà existante pour ce TP') {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
-        }
+        const soumission = await this.soumissionService.createSoumission(req.body);
+        res.status(201).json(soumission);
     }
 
     async update(req, res) {
-        try {
-            const soumission = await this.soumissionService.updateSoumission(req.params.id, req.body);
-            res.json(soumission);
-        } catch (error) {
-            if (error.message === 'Soumission non trouvée') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const soumission = await this.soumissionService.updateSoumission(req.params.id, req.body);
+        if (!soumission) {
+            throw new NotFoundError('Soumission non trouvée');
         }
+        res.json(soumission);
     }
 
     async delete(req, res) {
-        try {
-            await this.soumissionService.deleteSoumission(req.params.id);
-            res.json({ message: 'Soumission supprimée' });
-        } catch (error) {
-            if (error.message === 'Soumission non trouvée') {
-                res.status(404).json({ message: error.message });
-            } else {
-                res.status(500).json({ error: error.message });
-            }
+        const result = await this.soumissionService.deleteSoumission(req.params.id);
+        if (!result) {
+            throw new NotFoundError('Soumission non trouvée');
         }
+        res.json({ message: 'Soumission supprimée' });
     }
 }
 
