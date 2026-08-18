@@ -10,7 +10,7 @@ const ProfesseurList = () => {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
 
-  useEffect(() => {
+  useEffect(() => {a
     loadProfesseurs()
   }, [])
 
