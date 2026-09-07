@@ -25,13 +25,30 @@ function TravauxPratiques() {
     travailSelectionne &&
     soumissions.some((s) => s.travailId === travailSelectionne.id);
 
-  const handleSoumission = (e) => {
+  const handleSoumission = async (e) => {
     e.preventDefault();
-    setSoumissions([
-      ...soumissions,
-      { travailId: travailSelectionne.id, contenu },
-    ]);
-    setContenu("");
+
+    try {
+      const reponse = await fetch("http://localhost:5000/api/soumissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          titre: travailSelectionne.titre,
+          id_travail_pratique: travailSelectionne.id,
+        }),
+      });
+
+      if (!reponse.ok) throw new Error("Échec de la soumission");
+
+      setSoumissions([
+        ...soumissions,
+        { travailId: travailSelectionne.id, contenu },
+      ]);
+      setContenu("");
+    } catch (err) {
+      console.error(err);
+      alert("Impossible d'envoyer la soumission. Réessaie plus tard.");
+    }
   };
 
   return (
@@ -53,7 +70,7 @@ function TravauxPratiques() {
           >
             <p className="font-medium text-gray-800">{tp.titre}</p>
             <p className="text-sm text-gray-500">
-              Date limite : {tp.dateLimite}
+              Date limite : {tp.date_limite}
             </p>
             {soumissions.some((s) => s.travailId === tp.id) && (
               <span className="inline-block mt-1 text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
@@ -73,7 +90,7 @@ function TravauxPratiques() {
             {travailSelectionne.description}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Date limite : {travailSelectionne.dateLimite}
+            Date limite : {travailSelectionne.date_limite}
           </p>
 
           {dejaSoumis ? (

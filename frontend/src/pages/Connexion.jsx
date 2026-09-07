@@ -2,19 +2,39 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Connexion() {
-  // Champs contrôlés du formulaire : React garde en mémoire
-  // ce que l'utilisateur tape, pour pouvoir l'envoyer au backend
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
-  //  Permet de rediriger l'utilisateur depuis le code (pas juste via un lien)
+  const [erreur, setErreur] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // empêche le rechargement automatique de la page par le navigateur
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErreur("");
 
-    // Version temporaire : pas encore de vraie vérification côté backend
-    // (à remplacer par un appel API type POST /api/auth/login)
-    navigate("/etudiant");
+    try {
+      const reponse = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, mot_de_passe: motDePasse }),
+      });
+
+      if (!reponse.ok) {
+        const donneesErreur = await reponse.json();
+        setErreur(donneesErreur.message || "Échec de la connexion");
+        return;
+      }
+
+      const donnees = await reponse.json();
+
+      // On garde le token et les infos du professeur pour les requêtes suivantes
+      localStorage.setItem("token", donnees.token);
+      localStorage.setItem("utilisateur", JSON.stringify(donnees.professeur));
+
+      navigate("/professeur");
+    } catch (err) {
+      console.error(err);
+      setErreur("Impossible de se connecter au serveur");
+    }
   };
 
   return (
@@ -27,13 +47,17 @@ function Connexion() {
           Connexion
         </h1>
 
+        {erreur && (
+          <p className="mb-4 text-sm text-red-600 text-center">{erreur}</p>
+        )}
+
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Email
         </label>
         <input
           type="email"
-          value={email} // le champ affiche toujours la valeur en mémoire
-          onChange={(e) => setEmail(e.target.value)} // met à jour la mémoire à chaque frappe
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full mb-4 px-4 py-2 rounded-lg bg-indigo-50 border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-300"
           required
         />
